@@ -3,65 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Namma Metro Auto Pool</title>
+    <title>Namma Auto Pool</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="app-card">
+    <div class="background-decor"></div>
+    <main class="app-card">
         <header class="header">
-            <div class="logo">🛺</div>
-            <h1>Namma Auto Pool</h1>
-            <p class="tagline">Split auto fares between National College Metro & BMSCE!</p>
+            <div class="badge-pill">⚡ Live Campus Commute</div>
+            <h1>Namma Auto Pool 🛺</h1>
+            <p class="tagline">National College Metro ⇆ BMSCE</p>
         </header>
+
+        <!-- Dynamic Fare Savings Banner -->
+        <div class="savings-card">
+            <div class="savings-info">
+                <span>Solo Auto: <strong>~₹90</strong></span>
+                <span>Pooled Share: <strong class="green-text">~₹30/person</strong></span>
+            </div>
+            <div class="savings-badge">Save 66%</div>
+        </div>
         
         <form id="rideForm">
             <div class="form-group">
                 <label for="pickup">Pickup Location</label>
-                <select id="pickup" required>
-                    <option value="" disabled selected>Select pickup location</option>
-                    <option value="National College Metro Station">National College Metro Station</option>
-                    <option value="BMS College of Engineering">BMS College of Engineering</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="drop">Drop Location</label>
-                <select id="drop" required>
-                    <option value="" disabled selected>Select drop location</option>
-                    <option value="BMS College of Engineering">BMS College of Engineering</option>
-                    <option value="National College Metro Station">National College Metro Station</option>
-                </select>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="time">Departure Time</label>
-                    <input type="time" id="time" required>
-                </div>
-                <div class="form-group">
-                    <label for="seats">Seats Available</label>
-                    <select id="seats" required>
-                        <option value="2">2 Passengers Needed</option>
-                        <option value="1">1 Passenger Needed</option>
+                <div class="select-wrapper">
+                    <select id="pickup" required>
+                        <option value="" disabled selected>Choose Pickup Point</option>
+                        <option value="National College Metro Station">📍 National College Metro Station</option>
+                        <option value="BMS College of Engineering">🎓 BMS College of Engineering</option>
                     </select>
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary">Post Ride Request</button>
+            <div class="form-group">
+                <label for="drop">Drop Location</label>
+                <div class="select-wrapper">
+                    <select id="drop" required>
+                        <option value="" disabled selected>Choose Drop Point</option>
+                        <option value="BMS College of Engineering">🎓 BMS College of Engineering</option>
+                        <option value="National College Metro Station">📍 National College Metro Station</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="time">Time</label>
+                    <input type="time" id="time" required>
+                </div>
+                <div class="form-group">
+                    <label for="seats">Co-passengers</label>
+                    <select id="seats" required>
+                        <option value="2">Need 2 people</option>
+                        <option value="1">Need 1 person</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Post Pool Request 🚀</button>
         </form>
 
         <hr class="divider">
 
         <div class="rides-header">
-            <h2>Active Commuters</h2>
-            <button id="clearRidesBtn" class="btn-clear">Clear All</button>
+            <h2>Active Pools Nearby</h2>
+            <button id="clearRidesBtn" class="btn-clear">Reset</button>
         </div>
 
-        <div id="rideList" class="ride-list">
-            <!-- Dynamic ride cards will appear here -->
-        </div>
-    </div>
+        <div id="rideList" class="ride-list"></div>
+    </main>
 
     <script src="script.js"></script>
 </body>
