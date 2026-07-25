@@ -13,7 +13,7 @@ rideForm.addEventListener('submit', function(e) {
     const seats = document.getElementById('seats').value;
 
     if (pickup === drop) {
-        alert('Pickup and Drop locations cannot be the same!');
+        alert('Pickup and Drop locations cannot be identical!');
         return;
     }
 
@@ -45,7 +45,7 @@ function loadRides() {
     rideList.innerHTML = '';
     
     if (rides.length === 0) {
-        rideList.innerHTML = '<p class="empty-msg">No active ride requests yet. Be the first to post!</p>';
+        rideList.innerHTML = '<p class="empty-msg">No active pool requests right now. Create one above!</p>';
         return;
     }
 
@@ -56,15 +56,22 @@ function renderRide(ride) {
     const emptyMsg = document.querySelector('.empty-msg');
     if (emptyMsg) emptyMsg.remove();
 
+    // Coordinates for Uber Deep Linking
+    // National College Metro: 12.9438, 75.5752
+    // BMS College: 12.9416, 75.5684
+    let uberUrl = "https://m.uber.com/ul/";
+    
     const card = document.createElement('div');
     card.classList.add('ride-card');
     card.innerHTML = `
-        <div class="ride-route">📍 ${ride.pickup} ➔ 🎯 ${ride.drop}</div>
+        <div class="ride-route">${ride.pickup} ➔ ${ride.drop}</div>
         <div class="ride-details">
-            <span>⏰ Time: <strong>${ride.time}</strong></span>
-            <span>👥 Needs: <strong>${ride.seats} passenger(s)</strong></span>
+            <span>⏰ Departure: <strong>${ride.time}</strong></span>
+            <span>👥 Needs: <strong>${ride.seats} seat(s)</strong></span>
         </div>
-        <span class="badge">💰 Est. Share: ₹30/person</span>
+        <div class="card-actions">
+            <a href="${uberUrl}" target="_blank" class="btn-uber">🚕 Book Uber Ride</a>
+        </div>
     `;
 
     rideList.prepend(card);
