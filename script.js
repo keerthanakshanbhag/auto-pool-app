@@ -1,35 +1,47 @@
 let userLocation = null;
+let currentRideId = null;
+let peer = null;
+let activeCall = null;
 
-// Get Geolocation Coordinates
+// Initialize PeerJS for free anonymous browser-to-browser voice calling
+function initPeer() {
+    if (!peer) {
+        peer = new Peer();
+        peer.on('call', (call) => {
+            if (confirm("Incoming anonymous voice call from co-passenger. Accept?")) {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                    call.answer(stream);
+                    call.on('stream', (remoteStream) => {
+                        document.getElementById('remoteAudio').srcObject = remoteStream;
+                    });
+                    document.getElementById('callStatusText').innerText = "🔊 Call Connected!";
+                });
+            }
+        });
+    }
+}
+
+// GPS Logic
 document.getElementById('geoBtn').addEventListener('click', () => {
     const statusDiv = document.getElementById('locationStatus');
-    
     if ("geolocation" in navigator) {
         statusDiv.innerText = "Fetching live GPS coordinates...";
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
+                userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
                 statusDiv.innerText = `✅ GPS Attached (${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)})`;
             },
-            () => {
-                statusDiv.innerText = "❌ Location permission denied.";
-            }
+            () => statusDiv.innerText = "❌ Location permission denied."
         );
-    } else {
-        statusDiv.innerText = "Geolocation not supported by browser.";
     }
 });
 
-// Handle Form Submission
+// Form Submission
 document.getElementById('poolForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     const name = document.getElementById('studentName').value;
     const email = document.getElementById('studentEmail').value;
-    const phone = document.getElementById('studentPhone').value;
     const pickup = document.getElementById('pickupLoc').value;
     const drop = document.getElementById('dropLoc').value;
     const time = document.getElementById('depTime').value;
@@ -46,10 +58,9 @@ document.getElementById('poolForm').addEventListener('submit', function(e) {
     }
 
     const newPool = {
-        id: Date.now(),
+        id: 'pool-' + Date.now(),
         name,
         email,
-        phone,
         pickup,
         drop,
         time,
@@ -83,12 +94,7 @@ function renderPools() {
 
     pools.forEach(pool => {
         const firstLetter = pool.name.charAt(0).toUpperCase();
-        
-        // WhatsApp Chat Link
-        const waMsg = encodeURIComponent(`Hi ${pool.name}, saw your BMSCE Auto Pool request from ${pool.pickup} to ${pool.drop} at ${pool.time}. Is the seat available?`);
-        const waLink = `https://wa.me/91${pool.phone}?text=${waMsg}`;
 
-        // Live Google Maps Location Link
         let mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pool.pickup)}`;
         if (pool.location) {
             mapsLink = `https://www.google.com/maps?q=${pool.location.lat},${pool.location.lng}`;
@@ -110,13 +116,54 @@ function renderPools() {
                 <span>👥 Needs: <strong>${pool.seats} seat(s)</strong></span>
             </div>
             <div class="action-buttons">
-                <a href="${waLink}" target="_blank" class="btn-whatsapp">💬 Chat on WhatsApp</a>
-                <a href="${mapsLink}" target="_blank" class="btn-maps">🗺️ View Meeting Point</a>
+                <button onclick="openChat('${pool.id}', '${pool.name}')" class="btn-chat-action">🔒 Private Chat / Call</button>
+                <a href="${mapsLink}" target="_blank" class="btn-maps">🗺️ Meeting Point</a>
             </div>
         `;
         poolList.appendChild(card);
     });
 }
+
+// Open Overlay Modal (Chat + Voice Call)
+function openChat(rideId, name) {
+    currentRideId = rideId;
+    initPeer();
+    document.getElementById('chatTitle').innerText = `Connect with ${name}`;
+    document.getElementById('chatModal').classList.remove('hidden');
+}
+
+// Trigger Voice Call via WebRTC
+document.getElementById('startCallBtn').addEventListener('click', () => {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        document.getElementById('callStatusText').innerText = "Dialing co-passenger...";
+        const call = peer.call(currentRideId, stream);
+        call.on('stream', (remoteStream) => {
+            document.getElementById('remoteAudio').srcObject = remoteStream;
+            document.getElementById('callStatusText').innerText = "🔊 Call Connected!";
+        });
+    }).catch(() => {
+        alert("Microphone access is required for voice calling.");
+    });
+});
+
+document.getElementById('closeChat').addEventListener('click', () => {
+    document.getElementById('chatModal').classList.add('hidden');
+});
+
+document.getElementById('sendChatBtn').addEventListener('click', () => {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const chatContainer = document.getElementById('chatMessages');
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('msg', 'user');
+    msgDiv.innerText = text;
+    chatContainer.appendChild(msgDiv);
+    
+    input.value = '';
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+});
 
 document.getElementById('refreshBtn').addEventListener('click', renderPools);
 document.addEventListener('DOMContentLoaded', renderPools);
