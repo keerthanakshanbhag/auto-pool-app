@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro Auto Pool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🛺 Metro Auto Pool</h1>
+        <p class="tagline">Find fellow commuters & split auto/cab fares instantly!</p>
+        
+        <form id="rideForm">
+            <label for="pickup">Pickup Location</label>
+            <input type="text" id="pickup" placeholder="e.g., National College Metro" required>
+
+            <label for="drop">Drop Location</label>
+            <input type="text" id="drop" placeholder="e.g., BMS College of Engineering" required>
+
+            <label for="time">Departure Time</label>
+            <input type="time" id="time" required>
+
+            <button type="submit">Post / Find Ride</button>
+        </form>
+
+        <h2>Available Commuters</h2>
+        <div id="rideList"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
