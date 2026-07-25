@@ -1,34 +1,27 @@
-let userLocation = null;
-let currentRideId = null;
-let peer = null;
+let currentActiveRide = null;
 
-// Lock and Remember Email Functionality
+// Tab Switcher Logic
+document.getElementById('tabFind').addEventListener('click', () => switchTab('find'));
+document.getElementById('tabPost').addEventListener('click', () => switchTab('post'));
+
+function switchTab(tab) {
+    document.getElementById('tabFind').classList.toggle('active', tab === 'find');
+    document.getElementById('tabPost').classList.toggle('active', tab === 'post');
+    document.getElementById('viewFind').classList.toggle('active', tab === 'find');
+    document.getElementById('viewPost').classList.toggle('active', tab === 'post');
+}
+
+// Remember Email
 function checkSavedEmail() {
-    const savedEmail = localStorage.getItem('bmsce_user_email');
+    const savedEmail = localStorage.getItem('bmsce_email');
     if (savedEmail) {
-        const emailInput = document.getElementById('studentEmail');
-        emailInput.value = savedEmail;
-        emailInput.readOnly = true;
-        emailInput.style.opacity = '0.7';
+        const input = document.getElementById('studentEmail');
+        input.value = savedEmail;
+        input.readOnly = true;
     }
 }
 
-// GPS Attach
-document.getElementById('geoBtn').addEventListener('click', () => {
-    const statusDiv = document.getElementById('locationStatus');
-    if ("geolocation" in navigator) {
-        statusDiv.innerText = "Fetching live GPS...";
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                statusDiv.innerText = `✅ GPS Attached (${userLocation.lat.toFixed(3)}, ${userLocation.lng.toFixed(3)})`;
-            },
-            () => statusDiv.innerText = "❌ Location permission denied."
-        );
-    }
-});
-
-// Submit Ride Form
+// Create Pool (User = Captain)
 document.getElementById('poolForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -40,166 +33,154 @@ document.getElementById('poolForm').addEventListener('submit', function(e) {
     const seats = document.getElementById('seatsNeeded').value;
 
     if (pickup === drop) {
-        alert("Pickup and Drop points cannot be identical.");
+        alert("Pickup and Drop locations cannot be the same.");
         return;
     }
 
-    if (!email.endsWith('@bmsce.ac.in')) {
-        alert("Only official BMSCE email addresses (@bmsce.ac.in) are allowed!");
-        return;
-    }
+    localStorage.setItem('bmsce_email', email);
 
-    // Remember Email for future visits
-    localStorage.setItem('bmsce_user_email', email);
-
-    const newPool = {
-        id: 'pool-' + Date.now(),
-        name,
-        email,
+    const newRide = {
+        id: 'ride-' + Date.now(),
+        captainName: name,
+        captainEmail: email,
         pickup,
         drop,
         time,
         seats,
-        location: userLocation
+        uberBooked: false,
+        autoNo: '',
+        otp: ''
     };
 
-    savePool(newPool);
-    renderPools();
+    const rides = JSON.parse(localStorage.getItem('bmscePoolRides')) || [];
+    rides.unshift(newRide);
+    localStorage.setItem('bmscePoolRides', JSON.stringify(rides));
+
     this.reset();
     checkSavedEmail();
-    document.getElementById('locationStatus').innerText = "";
-    userLocation = null;
+    switchTab('find');
+    renderRides();
 });
 
-function savePool(pool) {
-    const pools = JSON.parse(localStorage.getItem('bmscePools')) || [];
-    pools.unshift(pool);
-    localStorage.setItem('bmscePools', JSON.stringify(pools));
-}
+// Render Ride Cards
+function renderRides() {
+    const list = document.getElementById('poolList');
+    const rides = JSON.parse(localStorage.getItem('bmscePoolRides')) || [];
+    const myEmail = localStorage.getItem('bmsce_email');
 
-function renderPools() {
-    const poolList = document.getElementById('poolList');
-    const pools = JSON.parse(localStorage.getItem('bmscePools')) || [];
+    list.innerHTML = '';
 
-    poolList.innerHTML = '';
-
-    if (pools.length === 0) {
-        poolList.innerHTML = '<p class="sub-text" style="text-align:center;">No active rides listed. Be the first to post!</p>';
+    if (rides.length === 0) {
+        list.innerHTML = '<p style="font-size:12px; color:#94a3b8; text-align:center;">No active rides listed right now.</p>';
         return;
     }
 
-    pools.forEach(pool => {
-        const firstLetter = pool.name.charAt(0).toUpperCase();
-
-        let mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pool.pickup)}`;
-        if (pool.location) {
-            mapsLink = `https://www.google.com/maps?q=${pool.location.lat},${pool.location.lng}`;
-        }
-
+    rides.forEach(ride => {
+        const isCaptain = ride.captainEmail === myEmail;
         const card = document.createElement('div');
         card.classList.add('pool-card');
         card.innerHTML = `
-            <div class="student-info">
-                <div class="avatar">${firstLetter}</div>
-                <div>
-                    <div><strong>${pool.name}</strong></div>
-                    <div class="verified-tag">✓ BMSCE Verified (${pool.email})</div>
+            <div class="card-top">
+                <div class="user-info">
+                    <div class="avatar">${ride.captainName.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <strong>${ride.captainName}</strong>
+                        <span class="badge-role">${isCaptain ? '👑 You (Captain)' : 'Captain'}</span>
+                    </div>
                 </div>
             </div>
-            <div class="route-text">🚗 ${pool.pickup} ➔ ${pool.drop}</div>
-            <div class="meta-row">
-                <span>⏰ Time: <strong>${pool.time}</strong></span>
-                <span>👥 Needs: <strong>${pool.seats} seat(s)</strong></span>
+            <div class="route">🚗 ${ride.pickup} ➔ ${ride.drop}</div>
+            <div class="details-row">
+                <span>⏰ Time: <strong>${ride.time}</strong></span>
+                <span>👥 Needs: <strong>${ride.seats} seat(s)</strong></span>
             </div>
-            <div class="action-buttons">
-                <button onclick="openChat('${pool.id}', '${pool.name}')" class="btn-chat-action">🔒 Chat / Call</button>
-                <a href="${mapsLink}" target="_blank" class="btn-maps">🗺️ Meeting Point</a>
-            </div>
+            <button onclick="openRideHub('${ride.id}')" class="btn-primary">
+                ${isCaptain ? 'Manage Ride & Uber 🛺' : 'Join & Chat 🔒'}
+            </button>
         `;
-        poolList.appendChild(card);
+        list.appendChild(card);
     });
 }
 
-// Broadcast Uber Ride Info
-document.getElementById('broadcastUberBtn').addEventListener('click', () => {
-    const autoNo = document.getElementById('autoNumber').value.trim();
-    const otp = document.getElementById('autoOtp').value.trim();
-    const display = document.getElementById('uberShareDisplay');
+// Open Ride Hub Modal
+function openRideHub(rideId) {
+    const rides = JSON.parse(localStorage.getItem('bmscePoolRides')) || [];
+    currentActiveRide = rides.find(r => r.id === rideId);
+    if (!currentActiveRide) return;
+
+    const myEmail = localStorage.getItem('bmsce_email');
+    const isCaptain = currentActiveRide.captainEmail === myEmail;
+
+    document.getElementById('modalTitle').innerText = `Pool Hub: ${currentActiveRide.pickup.split('(')[0]}`;
+    document.getElementById('captainUberBox').classList.toggle('hidden', !isCaptain);
+    document.getElementById('passengerUberBox').classList.toggle('hidden', isCaptain || currentActiveRide.uberBooked);
+    
+    updateUberCardDisplay();
+    document.getElementById('rideModal').classList.remove('hidden');
+}
+
+// Share Uber Credentials (Captain Action)
+document.getElementById('shareUberDetailsBtn').addEventListener('click', () => {
+    const autoNo = document.getElementById('uberAutoNo').value.trim();
+    const otp = document.getElementById('uberOtp').value.trim();
 
     if (!autoNo || !otp) {
-        alert("Please enter both Auto Number and Uber OTP.");
+        alert("Please enter both Auto Number and OTP.");
         return;
     }
 
-    display.classList.remove('hidden');
-    display.innerHTML = `
-        🛺 <strong>Uber Auto Booked!</strong><br>
-        🚘 <strong>Auto No:</strong> ${autoNo}<br>
-        🔑 <strong>Uber OTP:</strong> ${otp}<br>
-        <small style="color:#64748b;">Share this with co-passengers when boarding.</small>
-    `;
+    currentActiveRide.uberBooked = true;
+    currentActiveRide.autoNo = autoNo;
+    currentActiveRide.otp = otp;
+
+    const rides = JSON.parse(localStorage.getItem('bmscePoolRides')) || [];
+    const index = rides.findIndex(r => r.id === currentActiveRide.id);
+    if (index !== -1) {
+        rides[index] = currentActiveRide;
+        localStorage.setItem('bmscePoolRides', JSON.stringify(rides));
+    }
+
+    updateUberCardDisplay();
 });
 
-// PeerJS Anonymous Voice Call Init
-function initPeer() {
-    if (!peer) {
-        peer = new Peer();
-        peer.on('call', (call) => {
-            if (confirm("Incoming anonymous voice call. Accept?")) {
-                navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-                    call.answer(stream);
-                    call.on('stream', (remoteStream) => {
-                        document.getElementById('remoteAudio').srcObject = remoteStream;
-                    });
-                    document.getElementById('callStatusText').innerText = "🔊 Call Connected!";
-                });
-            }
-        });
+function updateUberCardDisplay() {
+    const liveCard = document.getElementById('liveUberCard');
+    if (currentActiveRide && currentActiveRide.uberBooked) {
+        liveCard.classList.remove('hidden');
+        document.getElementById('passengerUberBox').classList.add('hidden');
+        liveCard.innerHTML = `
+            🛺 <strong>Uber Auto Booked by Captain</strong><br>
+            🚘 <strong>Auto No:</strong> ${currentActiveRide.autoNo}<br>
+            🔑 <strong>Uber OTP:</strong> ${currentActiveRide.otp}
+        `;
+    } else {
+        liveCard.classList.add('hidden');
     }
 }
 
-function openChat(rideId, name) {
-    currentRideId = rideId;
-    initPeer();
-    document.getElementById('chatTitle').innerText = `Connect with ${name}`;
-    document.getElementById('chatModal').classList.remove('hidden');
-}
-
-document.getElementById('startCallBtn').addEventListener('click', () => {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        document.getElementById('callStatusText').innerText = "Dialing co-passenger...";
-        const call = peer.call(currentRideId, stream);
-        call.on('stream', (remoteStream) => {
-            document.getElementById('remoteAudio').srcObject = remoteStream;
-            document.getElementById('callStatusText').innerText = "🔊 Call Connected!";
-        });
-    }).catch(() => {
-        alert("Microphone permission required for calling.");
-    });
+// Modal Controls
+document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('rideModal').classList.add('hidden');
 });
 
-document.getElementById('closeChat').addEventListener('click', () => {
-    document.getElementById('chatModal').classList.add('hidden');
-});
-
-document.getElementById('sendChatBtn').addEventListener('click', () => {
+// Chat Send
+document.getElementById('sendMsgBtn').addEventListener('click', () => {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
     if (!text) return;
 
-    const chatContainer = document.getElementById('chatMessages');
-    const msgDiv = document.createElement('div');
-    msgDiv.classList.add('msg', 'user');
-    msgDiv.innerText = text;
-    chatContainer.appendChild(msgDiv);
-    
+    const box = document.getElementById('chatBox');
+    const msg = document.createElement('div');
+    msg.classList.add('msg', 'user');
+    msg.innerText = text;
+    box.appendChild(msg);
     input.value = '';
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    box.scrollTop = box.scrollHeight;
 });
 
-document.getElementById('refreshBtn').addEventListener('click', renderPools);
+document.getElementById('refreshBtn').addEventListener('click', renderRides);
 
 document.addEventListener('DOMContentLoaded', () => {
     checkSavedEmail();
-    renderPools();
+    renderRides();
 });

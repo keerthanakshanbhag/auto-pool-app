@@ -3,151 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BMSCE Namma Auto Pool</title>
+    <title>BMSCE AutoPool</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-    <!-- Ambient Glow Background -->
     <div class="ambient-glow glow-1"></div>
     <div class="ambient-glow glow-2"></div>
 
-    <div class="app-wrapper">
-        <!-- Header -->
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
         <header class="app-header">
             <div class="brand">
-                <div class="logo-icon">🛺</div>
+                <span class="logo">🛺</span>
                 <div>
                     <h1>BMSCE AutoPool</h1>
-                    <span class="sub-brand">Verified Student Commute</span>
+                    <span class="tagline">Verified Campus Commute</span>
                 </div>
             </div>
-            <div class="status-badge">
-                <span class="dot"></span> BMSCE Network
-            </div>
+            <div class="net-badge"><span class="pulse"></span> Verified</div>
         </header>
 
-        <!-- Main Form -->
-        <main class="card-container">
-            <h2 class="section-title">Post a Commute Pool</h2>
-            
-            <form id="poolForm">
-                <div class="input-grid">
-                    <div class="form-group">
-                        <label>Your Name</label>
-                        <input type="text" id="studentName" placeholder="e.g. BMSCEian" required>
-                    </div>
-                    <div class="form-group">
-                        <label>BMS Email (@bmsce.ac.in)</label>
-                        <input type="email" id="studentEmail" placeholder="student@bmsce.ac.in" pattern=".+@bmsce\.ac\.in" title="Must end with @bmsce.ac.in" required>
-                    </div>
-                </div>
+        <!-- Segmented Tab Navigation -->
+        <div class="tab-switcher">
+            <button class="tab-btn active" id="tabFind">Find Pools</button>
+            <button class="tab-btn" id="tabPost">+ Create Pool</button>
+        </div>
 
-                <div class="privacy-box">
-                    🔒 <strong>100% Anonymous Communication:</strong> Phone numbers are never exposed. Communicate via masked text or browser audio call.
-                </div>
-
-                <!-- Expanded Dropdown Locations -->
-                <div class="input-grid">
-                    <div class="form-group">
-                        <label>Pickup Location</label>
-                        <select id="pickupLoc" required>
-                            <option value="" disabled selected>Select Pickup Point</option>
-                            <option value="National College Metro (Gate 1 - National College Side)">📍 National College Metro (Gate 1 - National College Side)</option>
-                            <option value="National College Metro (Gate 2 - VV Puram Side)">📍 National College Metro (Gate 2 - VV Puram Side)</option>
-                            <option value="BMSCE Main Gate (Basavanagudi)">🎓 BMSCE Main Gate (Basavanagudi)</option>
-                            <option value="BMSCE Gate 2 (PG Block / Bull Temple Rd)">🎓 BMSCE Gate 2 (PG Block / Bull Temple Rd)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Drop Location</label>
-                        <select id="dropLoc" required>
-                            <option value="" disabled selected>Select Drop Point</option>
-                            <option value="BMSCE Main Gate (Basavanagudi)">🎓 BMSCE Main Gate (Basavanagudi)</option>
-                            <option value="BMSCE Gate 2 (PG Block / Bull Temple Rd)">🎓 BMSCE Gate 2 (PG Block / Bull Temple Rd)</option>
-                            <option value="National College Metro (Gate 1 - National College Side)">📍 National College Metro (Gate 1 - National College Side)</option>
-                            <option value="National College Metro (Gate 2 - VV Puram Side)">📍 National College Metro (Gate 2 - VV Puram Side)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="input-grid">
-                    <div class="form-group">
-                        <label>Departure Time</label>
-                        <input type="time" id="depTime" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Co-passengers Needed</label>
-                        <select id="seatsNeeded" required>
-                            <option value="2">Need 2 Commuters</option>
-                            <option value="1">Need 1 Commuter</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button type="button" class="btn-location" id="geoBtn">📍 Attach My Live GPS Location</button>
-                <div id="locationStatus" class="geo-status"></div>
-
-                <button type="submit" class="btn-primary">Create Live Pool Post 🚀</button>
-            </form>
-        </main>
-
-        <!-- Uber Booking & Share Card -->
-        <section class="card-container uber-section">
-            <h2 class="section-title">🛺 Book & Share Ride Details</h2>
-            <p class="sub-text">Once 2-3 students gather, open Uber to book an Auto and broadcast the Auto Number & OTP to co-passengers.</p>
-            
-            <a href="https://m.uber.com/ul/?action=setPickup" target="_blank" class="btn-uber">
-                <span>Book Auto on Uber App</span> ➔
-            </a>
-
-            <div class="uber-share-form">
-                <div class="input-grid">
-                    <input type="text" id="autoNumber" placeholder="Auto No (e.g. KA 05 AB 1234)">
-                    <input type="text" id="autoOtp" placeholder="Uber OTP (e.g. 4819)">
-                </div>
-                <button id="broadcastUberBtn" class="btn-secondary-action">Share Ride Info with Pool</button>
+        <!-- VIEW 1: AVAILABLE RIDES LIST -->
+        <section id="viewFind" class="view-section active">
+            <div class="section-header">
+                <h2>Active Student Rides</h2>
+                <button id="refreshBtn" class="icon-btn">🔄</button>
             </div>
-            <div id="uberShareDisplay" class="uber-display hidden"></div>
+            <div id="poolList" class="pool-grid"></div>
         </section>
 
-        <!-- Live Rides List -->
-        <section class="card-container pools-section">
-            <div class="pools-header">
-                <h2>Live Student Pools Nearby</h2>
-                <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
+        <!-- VIEW 2: CREATE RIDE FORM -->
+        <section id="viewPost" class="view-section">
+            <div class="card">
+                <h2>Post a Ride</h2>
+                <p class="card-sub">You will be designated as the <strong>Ride Captain</strong> responsible for booking the Uber Auto once passengers join.</p>
+                
+                <form id="poolForm">
+                    <div class="input-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="studentName" placeholder="e.g. BMSCEian" required>
+                        </div>
+                        <div class="form-group">
+                            <label>BMS Email</label>
+                            <input type="email" id="studentEmail" placeholder="user@bmsce.ac.in" pattern=".+@bmsce\.ac\.in" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pickup Point</label>
+                        <select id="pickupLoc" required>
+                            <option value="" disabled selected>Select Location</option>
+                            <option value="National College Metro (Gate 1 - College Side)">📍 National College Metro (Gate 1 - College Side)</option>
+                            <option value="National College Metro (Gate 2 - VV Puram Side)">📍 National College Metro (Gate 2 - VV Puram Side)</option>
+                            <option value="BMSCE Main Gate (Basavanagudi)">🎓 BMSCE Main Gate (Basavanagudi)</option>
+                            <option value="BMSCE Gate 2 (PG Block / Bull Temple Rd)">🎓 BMSCE Gate 2 (PG Block / Bull Temple Rd)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Drop Point</label>
+                        <select id="dropLoc" required>
+                            <option value="" disabled selected>Select Location</option>
+                            <option value="BMSCE Main Gate (Basavanagudi)">🎓 BMSCE Main Gate (Basavanagudi)</option>
+                            <option value="BMSCE Gate 2 (PG Block / Bull Temple Rd)">🎓 BMSCE Gate 2 (PG Block / Bull Temple Rd)</option>
+                            <option value="National College Metro (Gate 1 - College Side)">📍 National College Metro (Gate 1 - College Side)</option>
+                            <option value="National College Metro (Gate 2 - VV Puram Side)">📍 National College Metro (Gate 2 - VV Puram Side)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="form-group">
+                            <label>Departure Time</label>
+                            <input type="time" id="depTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Passengers Needed</label>
+                            <select id="seatsNeeded" required>
+                                <option value="2">2 Seats</option>
+                                <option value="1">1 Seat</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Post Pool as Captain 🚀</button>
+                </form>
             </div>
-            <div id="poolList" class="pool-list"></div>
         </section>
     </div>
 
-    <!-- Fixed Overlay Chat Modal -->
-    <div id="chatModal" class="chat-modal hidden">
-        <div class="chat-card">
-            <div class="chat-header">
-                <span id="chatTitle">Private Ride Chat</span>
-                <button id="closeChat" class="close-btn">✖</button>
+    <!-- RIDE DETAILS & COMMUNICATION MODAL -->
+    <div id="rideModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle">Ride Hub</h3>
+                <button id="closeModal" class="close-icon">✕</button>
             </div>
 
-            <div class="call-banner">
-                <span id="callStatusText">📞 Anonymous Call: Ready</span>
-                <button id="startCallBtn" class="btn-call">Call Peer 🎧</button>
+            <!-- Captain Only Uber Controls -->
+            <div id="captainUberBox" class="captain-box hidden">
+                <div class="badge-captain">👑 You are Ride Captain</div>
+                <p>Only you can book Uber to avoid double booking.</p>
+                <a href="https://m.uber.com/ul/?action=setPickup" target="_blank" class="btn-uber">Book Auto on Uber 🛺</a>
+                
+                <div class="input-row" style="margin-top: 10px;">
+                    <input type="text" id="uberAutoNo" placeholder="Auto No (e.g. KA 05 AB 1234)">
+                    <input type="text" id="uberOtp" placeholder="OTP (e.g. 4819)">
+                </div>
+                <button id="shareUberDetailsBtn" class="btn-secondary">Share Ride Credentials</button>
             </div>
 
-            <div id="chatMessages" class="chat-messages">
-                <div class="msg system">🔒 End-to-end masked channel active. Phone numbers are hidden.</div>
+            <!-- Passenger View for Uber Details -->
+            <div id="passengerUberBox" class="passenger-box hidden">
+                <div class="badge-info">⏳ Waiting for Captain to Book Auto...</div>
             </div>
 
-            <div class="chat-input-row">
-                <input type="text" id="chatInput" placeholder="Type a message (e.g. 'I am at Gate 1')...">
-                <button id="sendChatBtn" class="btn-primary">Send</button>
+            <!-- Live Shared Uber Card -->
+            <div id="liveUberCard" class="live-uber-card hidden"></div>
+
+            <!-- Private Masked Messaging -->
+            <div class="chat-section">
+                <div id="chatBox" class="chat-box">
+                    <div class="msg system">🔒 Phone numbers hidden. Masked channel active.</div>
+                </div>
+                <div class="chat-controls">
+                    <input type="text" id="chatInput" placeholder="Type message (e.g., 'At Gate 1')...">
+                    <button id="sendMsgBtn" class="btn-primary">Send</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <audio id="remoteAudio" autoplay></audio>
     <script src="script.js"></script>
 </body>
 </html>
