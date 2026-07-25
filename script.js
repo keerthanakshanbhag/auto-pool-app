@@ -1,83 +1,122 @@
-document.addEventListener('DOMContentLoaded', loadRides);
+let userLocation = null;
 
-const rideForm = document.getElementById('rideForm');
-const rideList = document.getElementById('rideList');
-const clearRidesBtn = document.getElementById('clearRidesBtn');
+// Get Geolocation Coordinates
+document.getElementById('geoBtn').addEventListener('click', () => {
+    const statusDiv = document.getElementById('locationStatus');
+    
+    if ("geolocation" in navigator) {
+        statusDiv.innerText = "Fetching live GPS coordinates...";
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                statusDiv.innerText = `✅ GPS Attached (${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)})`;
+            },
+            () => {
+                statusDiv.innerText = "❌ Location permission denied.";
+            }
+        );
+    } else {
+        statusDiv.innerText = "Geolocation not supported by browser.";
+    }
+});
 
-rideForm.addEventListener('submit', function(e) {
+// Handle Form Submission
+document.getElementById('poolForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const pickup = document.getElementById('pickup').value;
-    const drop = document.getElementById('drop').value;
-    const time = document.getElementById('time').value;
-    const seats = document.getElementById('seats').value;
+    const name = document.getElementById('studentName').value;
+    const email = document.getElementById('studentEmail').value;
+    const phone = document.getElementById('studentPhone').value;
+    const pickup = document.getElementById('pickupLoc').value;
+    const drop = document.getElementById('dropLoc').value;
+    const time = document.getElementById('depTime').value;
+    const seats = document.getElementById('seatsNeeded').value;
 
     if (pickup === drop) {
-        alert('Pickup and Drop locations cannot be identical!');
+        alert("Pickup and Drop points cannot be identical.");
         return;
     }
 
-    const newRide = {
+    if (!email.endsWith('@bmsce.ac.in')) {
+        alert("Only official BMSCE email addresses (@bmsce.ac.in) are allowed!");
+        return;
+    }
+
+    const newPool = {
         id: Date.now(),
+        name,
+        email,
+        phone,
         pickup,
         drop,
         time,
-        seats
+        seats,
+        location: userLocation
     };
 
-    saveRide(newRide);
-    renderRide(newRide);
-    rideForm.reset();
+    savePool(newPool);
+    renderPools();
+    this.reset();
+    document.getElementById('locationStatus').innerText = "";
+    userLocation = null;
 });
 
-function saveRide(ride) {
-    const rides = getRidesFromStorage();
-    rides.unshift(ride);
-    localStorage.setItem('metroRides', JSON.stringify(rides));
+function savePool(pool) {
+    const pools = JSON.parse(localStorage.getItem('bmscePools')) || [];
+    pools.unshift(pool);
+    localStorage.setItem('bmscePools', JSON.stringify(pools));
 }
 
-function getRidesFromStorage() {
-    return JSON.parse(localStorage.getItem('metroRides')) || [];
-}
+function renderPools() {
+    const poolList = document.getElementById('poolList');
+    const pools = JSON.parse(localStorage.getItem('bmscePools')) || [];
 
-function loadRides() {
-    const rides = getRidesFromStorage();
-    rideList.innerHTML = '';
-    
-    if (rides.length === 0) {
-        rideList.innerHTML = '<p class="empty-msg">No active pool requests right now. Create one above!</p>';
+    poolList.innerHTML = '';
+
+    if (pools.length === 0) {
+        poolList.innerHTML = '<p class="empty-msg">No active student rides currently listed. Post one above!</p>';
         return;
     }
 
-    rides.forEach(renderRide);
+    pools.forEach(pool => {
+        const firstLetter = pool.name.charAt(0).toUpperCase();
+        
+        // WhatsApp Chat Link
+        const waMsg = encodeURIComponent(`Hi ${pool.name}, saw your BMSCE Auto Pool request from ${pool.pickup} to ${pool.drop} at ${pool.time}. Is the seat available?`);
+        const waLink = `https://wa.me/91${pool.phone}?text=${waMsg}`;
+
+        // Live Google Maps Location Link
+        let mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pool.pickup)}`;
+        if (pool.location) {
+            mapsLink = `https://www.google.com/maps?q=${pool.location.lat},${pool.location.lng}`;
+        }
+
+        const card = document.createElement('div');
+        card.classList.add('pool-card');
+        card.innerHTML = `
+            <div class="student-info">
+                <div class="avatar">${firstLetter}</div>
+                <div>
+                    <div><strong>${pool.name}</strong></div>
+                    <div class="verified-tag">✓ BMSCE Student (${pool.email})</div>
+                </div>
+            </div>
+            <div class="route-text">🚗 ${pool.pickup} ➔ ${pool.drop}</div>
+            <div class="meta-row">
+                <span>⏰ Time: <strong>${pool.time}</strong></span>
+                <span>👥 Needs: <strong>${pool.seats} seat(s)</strong></span>
+            </div>
+            <div class="action-buttons">
+                <a href="${waLink}" target="_blank" class="btn-whatsapp">💬 Chat on WhatsApp</a>
+                <a href="${mapsLink}" target="_blank" class="btn-maps">🗺️ View Meeting Point</a>
+            </div>
+        `;
+        poolList.appendChild(card);
+    });
 }
 
-function renderRide(ride) {
-    const emptyMsg = document.querySelector('.empty-msg');
-    if (emptyMsg) emptyMsg.remove();
-
-    // Coordinates for Uber Deep Linking
-    // National College Metro: 12.9438, 75.5752
-    // BMS College: 12.9416, 75.5684
-    let uberUrl = "https://m.uber.com/ul/";
-    
-    const card = document.createElement('div');
-    card.classList.add('ride-card');
-    card.innerHTML = `
-        <div class="ride-route">${ride.pickup} ➔ ${ride.drop}</div>
-        <div class="ride-details">
-            <span>⏰ Departure: <strong>${ride.time}</strong></span>
-            <span>👥 Needs: <strong>${ride.seats} seat(s)</strong></span>
-        </div>
-        <div class="card-actions">
-            <a href="${uberUrl}" target="_blank" class="btn-uber">🚕 Book Uber Ride</a>
-        </div>
-    `;
-
-    rideList.prepend(card);
-}
-
-clearRidesBtn.addEventListener('click', function() {
-    localStorage.removeItem('metroRides');
-    loadRides();
-});
+document.getElementById('refreshBtn').addEventListener('click', renderPools);
+document.addEventListener('DOMContentLoaded', renderPools);

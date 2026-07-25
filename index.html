@@ -2,78 +2,116 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Namma Auto Pool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BMSCE Namma Auto Pool</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="background-decor"></div>
-    <main class="app-card">
-        <header class="header">
-            <div class="badge-pill">⚡ Live Campus Commute</div>
-            <h1>Namma Auto Pool 🛺</h1>
-            <p class="tagline">National College Metro ⇆ BMSCE</p>
+
+    <!-- Background Ambient Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <div class="app-wrapper">
+        <!-- Top App Bar -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">🛺</div>
+                <div>
+                    <h1>BMSCE AutoPool</h1>
+                    <span class="sub-brand">Verified Student Commute</span>
+                </div>
+            </div>
+            <div class="status-badge" id="bmsBadge">
+                <span class="dot"></span> BMSCE Network
+            </div>
         </header>
 
-        <!-- Dynamic Fare Savings Banner -->
-        <div class="savings-card">
-            <div class="savings-info">
-                <span>Solo Auto: <strong>~₹90</strong></span>
-                <span>Pooled Share: <strong class="green-text">~₹30/person</strong></span>
-            </div>
-            <div class="savings-badge">Save 66%</div>
-        </div>
-        
-        <form id="rideForm">
-            <div class="form-group">
-                <label for="pickup">Pickup Location</label>
-                <div class="select-wrapper">
-                    <select id="pickup" required>
-                        <option value="" disabled selected>Choose Pickup Point</option>
-                        <option value="National College Metro Station">📍 National College Metro Station</option>
-                        <option value="BMS College of Engineering">🎓 BMS College of Engineering</option>
-                    </select>
+        <!-- Dynamic Cost Calculator Widget -->
+        <section class="savings-card">
+            <div class="savings-det">
+                <span class="label">Estimated Campus Fare</span>
+                <div class="fare-split">
+                    <span class="old-fare">₹90 Solo</span>
+                    <span class="new-fare">₹30 / head</span>
                 </div>
             </div>
+            <div class="discount-pill">SAVE 66%</div>
+        </section>
 
-            <div class="form-group">
-                <label for="drop">Drop Location</label>
-                <div class="select-wrapper">
-                    <select id="drop" required>
-                        <option value="" disabled selected>Choose Drop Point</option>
-                        <option value="BMS College of Engineering">🎓 BMS College of Engineering</option>
-                        <option value="National College Metro Station">📍 National College Metro Station</option>
-                    </select>
+        <!-- Ride Posting Form -->
+        <main class="card-container">
+            <h2 class="section-title">Post a Commute Pool</h2>
+            
+            <form id="poolForm">
+                <!-- Student Identity Inputs -->
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" id="studentName" placeholder="e.g. Keerthana S" required>
+                    </div>
+                    <div class="form-group">
+                        <label>BMS Email (@bmsce.ac.in)</label>
+                        <input type="email" id="studentEmail" placeholder="student@bmsce.ac.in" pattern=".+@bmsce\.ac\.in" title="Must end with @bmsce.ac.in" required>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-row">
                 <div class="form-group">
-                    <label for="time">Time</label>
-                    <input type="time" id="time" required>
+                    <label>WhatsApp Contact Number</label>
+                    <input type="tel" id="studentPhone" placeholder="10-digit Mobile Number" pattern="[0-9]{10}" required>
                 </div>
-                <div class="form-group">
-                    <label for="seats">Co-passengers</label>
-                    <select id="seats" required>
-                        <option value="2">Need 2 people</option>
-                        <option value="1">Need 1 person</option>
-                    </select>
+
+                <!-- Pickup & Drop Locations -->
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>Pickup Location</label>
+                        <select id="pickupLoc" required>
+                            <option value="" disabled selected>Select Pickup Point</option>
+                            <option value="National College Metro Station">📍 National College Metro Gate 1</option>
+                            <option value="BMSCE Main Campus Gate 1">🎓 BMSCE Main Gate (Basavanagudi)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Drop Location</label>
+                        <select id="dropLoc" required>
+                            <option value="" disabled selected>Select Drop Point</option>
+                            <option value="BMSCE Main Campus Gate 1">🎓 BMSCE Main Gate (Basavanagudi)</option>
+                            <option value="National College Metro Station">📍 National College Metro Gate 1</option>
+                        </select>
+                    </div>
                 </div>
+
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>Departure Time</label>
+                        <input type="time" id="depTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Co-passengers Needed</label>
+                        <select id="seatsNeeded" required>
+                            <option value="2">Need 2 Commuters</option>
+                            <option value="1">Need 1 Commuter</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-location" id="geoBtn">📍 Attach My Live GPS Location</button>
+                <div id="locationStatus" class="geo-status"></div>
+
+                <button type="submit" class="btn-primary">Create Live Pool Post 🚀</button>
+            </form>
+        </main>
+
+        <!-- Real-Time Student Rides List -->
+        <section class="card-container pools-section">
+            <div class="pools-header">
+                <h2>Live Student Pools Nearby</h2>
+                <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
             </div>
-
-            <button type="submit" class="btn-primary">Post Pool Request 🚀</button>
-        </form>
-
-        <hr class="divider">
-
-        <div class="rides-header">
-            <h2>Active Pools Nearby</h2>
-            <button id="clearRidesBtn" class="btn-clear">Reset</button>
-        </div>
-
-        <div id="rideList" class="ride-list"></div>
-    </main>
+            <div id="poolList" class="pool-list"></div>
+        </section>
+    </div>
 
     <script src="script.js"></script>
 </body>
