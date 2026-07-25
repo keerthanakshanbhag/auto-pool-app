@@ -6,17 +6,16 @@
     <title>BMSCE Namma Auto Pool</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Free Open-Source Audio Calling Library (PeerJS) -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-    <!-- Background Ambient Glows -->
+    <!-- Ambient Glow Background -->
     <div class="ambient-glow glow-1"></div>
     <div class="ambient-glow glow-2"></div>
 
     <div class="app-wrapper">
-        <!-- Top App Bar -->
+        <!-- Header -->
         <header class="app-header">
             <div class="brand">
                 <div class="logo-icon">🛺</div>
@@ -25,12 +24,12 @@
                     <span class="sub-brand">Verified Student Commute</span>
                 </div>
             </div>
-            <div class="status-badge" id="bmsBadge">
+            <div class="status-badge">
                 <span class="dot"></span> BMSCE Network
             </div>
         </header>
 
-        <!-- Ride Posting Form -->
+        <!-- Main Form -->
         <main class="card-container">
             <h2 class="section-title">Post a Commute Pool</h2>
             
@@ -38,7 +37,7 @@
                 <div class="input-grid">
                     <div class="form-group">
                         <label>Your Name</label>
-                        <input type="text" id="studentName" placeholder="e.g. Ananya Sharma" required>
+                        <input type="text" id="studentName" placeholder="e.g. BMSCEian" required>
                     </div>
                     <div class="form-group">
                         <label>BMS Email (@bmsce.ac.in)</label>
@@ -50,21 +49,26 @@
                     🔒 <strong>100% Anonymous Communication:</strong> Phone numbers are never exposed. Communicate via masked text or browser audio call.
                 </div>
 
+                <!-- Expanded Dropdown Locations -->
                 <div class="input-grid">
                     <div class="form-group">
                         <label>Pickup Location</label>
                         <select id="pickupLoc" required>
                             <option value="" disabled selected>Select Pickup Point</option>
-                            <option value="National College Metro Station">📍 National College Metro Gate 1</option>
-                            <option value="BMSCE Main Campus Gate 1">🎓 BMSCE Main Gate (Basavanagudi)</option>
+                            <option value="National College Metro (Gate 1 - National College Side)">📍 National College Metro (Gate 1 - National College Side)</option>
+                            <option value="National College Metro (Gate 2 - VV Puram Side)">📍 National College Metro (Gate 2 - VV Puram Side)</option>
+                            <option value="BMSCE Main Gate (Basavanagudi)">🎓 BMSCE Main Gate (Basavanagudi)</option>
+                            <option value="BMSCE Gate 2 (PG Block / Bull Temple Rd)">🎓 BMSCE Gate 2 (PG Block / Bull Temple Rd)</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Drop Location</label>
                         <select id="dropLoc" required>
                             <option value="" disabled selected>Select Drop Point</option>
-                            <option value="BMSCE Main Campus Gate 1">🎓 BMSCE Main Gate (Basavanagudi)</option>
-                            <option value="National College Metro Station">📍 National College Metro Gate 1</option>
+                            <option value="BMSCE Main Gate (Basavanagudi)">🎓 BMSCE Main Gate (Basavanagudi)</option>
+                            <option value="BMSCE Gate 2 (PG Block / Bull Temple Rd)">🎓 BMSCE Gate 2 (PG Block / Bull Temple Rd)</option>
+                            <option value="National College Metro (Gate 1 - National College Side)">📍 National College Metro (Gate 1 - National College Side)</option>
+                            <option value="National College Metro (Gate 2 - VV Puram Side)">📍 National College Metro (Gate 2 - VV Puram Side)</option>
                         </select>
                     </div>
                 </div>
@@ -90,7 +94,26 @@
             </form>
         </main>
 
-        <!-- Real-Time Student Rides List -->
+        <!-- Uber Booking & Share Card -->
+        <section class="card-container uber-section">
+            <h2 class="section-title">🛺 Book & Share Ride Details</h2>
+            <p class="sub-text">Once 2-3 students gather, open Uber to book an Auto and broadcast the Auto Number & OTP to co-passengers.</p>
+            
+            <a href="https://m.uber.com/ul/?action=setPickup" target="_blank" class="btn-uber">
+                <span>Book Auto on Uber App</span> ➔
+            </a>
+
+            <div class="uber-share-form">
+                <div class="input-grid">
+                    <input type="text" id="autoNumber" placeholder="Auto No (e.g. KA 05 AB 1234)">
+                    <input type="text" id="autoOtp" placeholder="Uber OTP (e.g. 4819)">
+                </div>
+                <button id="broadcastUberBtn" class="btn-secondary-action">Share Ride Info with Pool</button>
+            </div>
+            <div id="uberShareDisplay" class="uber-display hidden"></div>
+        </section>
+
+        <!-- Live Rides List -->
         <section class="card-container pools-section">
             <div class="pools-header">
                 <h2>Live Student Pools Nearby</h2>
@@ -100,17 +123,16 @@
         </section>
     </div>
 
-    <!-- Private Chat & Call Overlay Window -->
+    <!-- Fixed Overlay Chat Modal -->
     <div id="chatModal" class="chat-modal hidden">
         <div class="chat-card">
             <div class="chat-header">
-                <span id="chatTitle">Private Ride Communication</span>
+                <span id="chatTitle">Private Ride Chat</span>
                 <button id="closeChat" class="close-btn">✖</button>
             </div>
 
-            <!-- Call Bar Inside Modal -->
             <div class="call-banner">
-                <span id="callStatusText">📞 Masked Voice Call: Ready</span>
+                <span id="callStatusText">📞 Anonymous Call: Ready</span>
                 <button id="startCallBtn" class="btn-call">Call Peer 🎧</button>
             </div>
 
@@ -119,7 +141,7 @@
             </div>
 
             <div class="chat-input-row">
-                <input type="text" id="chatInput" placeholder="Type a message (e.g., 'I am at Gate 1')...">
+                <input type="text" id="chatInput" placeholder="Type a message (e.g. 'I am at Gate 1')...">
                 <button id="sendChatBtn" class="btn-primary">Send</button>
             </div>
         </div>

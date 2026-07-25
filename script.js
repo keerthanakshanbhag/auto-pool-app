@@ -1,46 +1,38 @@
 let userLocation = null;
 let currentRideId = null;
 let peer = null;
-let activeCall = null;
 
-// Initialize PeerJS for free anonymous browser-to-browser voice calling
-function initPeer() {
-    if (!peer) {
-        peer = new Peer();
-        peer.on('call', (call) => {
-            if (confirm("Incoming anonymous voice call from co-passenger. Accept?")) {
-                navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-                    call.answer(stream);
-                    call.on('stream', (remoteStream) => {
-                        document.getElementById('remoteAudio').srcObject = remoteStream;
-                    });
-                    document.getElementById('callStatusText').innerText = "🔊 Call Connected!";
-                });
-            }
-        });
+// Lock and Remember Email Functionality
+function checkSavedEmail() {
+    const savedEmail = localStorage.getItem('bmsce_user_email');
+    if (savedEmail) {
+        const emailInput = document.getElementById('studentEmail');
+        emailInput.value = savedEmail;
+        emailInput.readOnly = true;
+        emailInput.style.opacity = '0.7';
     }
 }
 
-// GPS Logic
+// GPS Attach
 document.getElementById('geoBtn').addEventListener('click', () => {
     const statusDiv = document.getElementById('locationStatus');
     if ("geolocation" in navigator) {
-        statusDiv.innerText = "Fetching live GPS coordinates...";
+        statusDiv.innerText = "Fetching live GPS...";
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-                statusDiv.innerText = `✅ GPS Attached (${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)})`;
+            (pos) => {
+                userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                statusDiv.innerText = `✅ GPS Attached (${userLocation.lat.toFixed(3)}, ${userLocation.lng.toFixed(3)})`;
             },
             () => statusDiv.innerText = "❌ Location permission denied."
         );
     }
 });
 
-// Form Submission
+// Submit Ride Form
 document.getElementById('poolForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const name = document.getElementById('studentName').value;
+    const name = document.getElementById('studentName').value || 'BMSCEian';
     const email = document.getElementById('studentEmail').value;
     const pickup = document.getElementById('pickupLoc').value;
     const drop = document.getElementById('dropLoc').value;
@@ -57,6 +49,9 @@ document.getElementById('poolForm').addEventListener('submit', function(e) {
         return;
     }
 
+    // Remember Email for future visits
+    localStorage.setItem('bmsce_user_email', email);
+
     const newPool = {
         id: 'pool-' + Date.now(),
         name,
@@ -71,6 +66,7 @@ document.getElementById('poolForm').addEventListener('submit', function(e) {
     savePool(newPool);
     renderPools();
     this.reset();
+    checkSavedEmail();
     document.getElementById('locationStatus').innerText = "";
     userLocation = null;
 });
@@ -88,7 +84,7 @@ function renderPools() {
     poolList.innerHTML = '';
 
     if (pools.length === 0) {
-        poolList.innerHTML = '<p class="empty-msg">No active student rides currently listed. Post one above!</p>';
+        poolList.innerHTML = '<p class="sub-text" style="text-align:center;">No active rides listed. Be the first to post!</p>';
         return;
     }
 
@@ -107,7 +103,7 @@ function renderPools() {
                 <div class="avatar">${firstLetter}</div>
                 <div>
                     <div><strong>${pool.name}</strong></div>
-                    <div class="verified-tag">✓ BMSCE Student (${pool.email})</div>
+                    <div class="verified-tag">✓ BMSCE Verified (${pool.email})</div>
                 </div>
             </div>
             <div class="route-text">🚗 ${pool.pickup} ➔ ${pool.drop}</div>
@@ -116,7 +112,7 @@ function renderPools() {
                 <span>👥 Needs: <strong>${pool.seats} seat(s)</strong></span>
             </div>
             <div class="action-buttons">
-                <button onclick="openChat('${pool.id}', '${pool.name}')" class="btn-chat-action">🔒 Private Chat / Call</button>
+                <button onclick="openChat('${pool.id}', '${pool.name}')" class="btn-chat-action">🔒 Chat / Call</button>
                 <a href="${mapsLink}" target="_blank" class="btn-maps">🗺️ Meeting Point</a>
             </div>
         `;
@@ -124,7 +120,44 @@ function renderPools() {
     });
 }
 
-// Open Overlay Modal (Chat + Voice Call)
+// Broadcast Uber Ride Info
+document.getElementById('broadcastUberBtn').addEventListener('click', () => {
+    const autoNo = document.getElementById('autoNumber').value.trim();
+    const otp = document.getElementById('autoOtp').value.trim();
+    const display = document.getElementById('uberShareDisplay');
+
+    if (!autoNo || !otp) {
+        alert("Please enter both Auto Number and Uber OTP.");
+        return;
+    }
+
+    display.classList.remove('hidden');
+    display.innerHTML = `
+        🛺 <strong>Uber Auto Booked!</strong><br>
+        🚘 <strong>Auto No:</strong> ${autoNo}<br>
+        🔑 <strong>Uber OTP:</strong> ${otp}<br>
+        <small style="color:#64748b;">Share this with co-passengers when boarding.</small>
+    `;
+});
+
+// PeerJS Anonymous Voice Call Init
+function initPeer() {
+    if (!peer) {
+        peer = new Peer();
+        peer.on('call', (call) => {
+            if (confirm("Incoming anonymous voice call. Accept?")) {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                    call.answer(stream);
+                    call.on('stream', (remoteStream) => {
+                        document.getElementById('remoteAudio').srcObject = remoteStream;
+                    });
+                    document.getElementById('callStatusText').innerText = "🔊 Call Connected!";
+                });
+            }
+        });
+    }
+}
+
 function openChat(rideId, name) {
     currentRideId = rideId;
     initPeer();
@@ -132,7 +165,6 @@ function openChat(rideId, name) {
     document.getElementById('chatModal').classList.remove('hidden');
 }
 
-// Trigger Voice Call via WebRTC
 document.getElementById('startCallBtn').addEventListener('click', () => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         document.getElementById('callStatusText').innerText = "Dialing co-passenger...";
@@ -142,7 +174,7 @@ document.getElementById('startCallBtn').addEventListener('click', () => {
             document.getElementById('callStatusText').innerText = "🔊 Call Connected!";
         });
     }).catch(() => {
-        alert("Microphone access is required for voice calling.");
+        alert("Microphone permission required for calling.");
     });
 });
 
@@ -166,4 +198,8 @@ document.getElementById('sendChatBtn').addEventListener('click', () => {
 });
 
 document.getElementById('refreshBtn').addEventListener('click', renderPools);
-document.addEventListener('DOMContentLoaded', renderPools);
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkSavedEmail();
+    renderPools();
+});
